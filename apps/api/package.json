@@ -1,0 +1,9 @@
+{
+  "name": "@cognitive-os/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "../../.venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload",
+    "start": "../../.venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 8000"
+  }
+}

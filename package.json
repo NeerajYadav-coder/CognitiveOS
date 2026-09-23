@@ -1,0 +1,28 @@
+{
+  "name": "cognitive-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CognitiveOS — An Operating Layer Between Human Cognition and Artificial Intelligence",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "test": "turbo run test",
+    "clean": "turbo run clean && find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "dev:api": "turbo run dev --filter=@cognitive-os/api",
+    "dev:web": "turbo run dev --filter=@cognitive-os/web",
+    "dev:extension": "turbo run dev --filter=@cognitive-os/extension"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.2.5",
+    "eslint": "^8.57.0",
+    "@types/node": "^20.12.7"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
