@@ -1,6 +1,7 @@
 # CognitiveOS
 
-> **An Operating Layer Between Human Cognition and Artificial Intelligence**
+> **An Operating Layer Between Human Cognition and Artificial Intelligence**  
+> *Created by NJ 5.0 (`CreatedBYNJ5.0`)*
 
 CognitiveOS is not a prompt enhancer. It is a **cognitive infrastructure system** — a modular, extensible platform that helps humans discover intent, structure thinking, navigate concepts, and communicate effectively with AI.
 
@@ -170,6 +171,35 @@ pnpm --filter @cognitive-os/web build
 
 ---
 
+## Roadmap & Next Stages
+
+```
+Phase 1: Cognitive Core & Extension MVP [COMPLETED]
+   └── 15 Cognitive Engines • Next.js 15 Dashboard • Plasmo Chrome MV3 • Test Suite
+
+Phase 2: Multi-Modal & Ambient Ingestion [CURRENT STAGE]
+   ├── Real-time voice stream ingestion with spoken thought ambiguity scoring
+   ├── Spatial mind-mapping & canvas reasoning (concept graph visualizer)
+   └── Dynamic browser context anchors (DOM-aware prompt grounding)
+
+Phase 3: Dialectical Co-Reasoning & Agent Feedback Loops [UPCOMING]
+   ├── Socratic stress-testing agents (pre-mortem analysis, devil's advocate)
+   ├── Multi-agent collaborative consensus before dispatching to primary LLMs
+   └── Automated prompt drift prevention and cognitive schema evolution
+
+Phase 4: Metacognitive Health & Longitudinal Growth Tracking
+   ├── Cognitive bias detection (confirmation bias, premature convergence, framing traps)
+   ├── Clarity trajectory score tracking and conceptual vocabulary growth
+   └── Personalized cognitive style fine-tuning (analytical, exploratory, strategic)
+
+Phase 5: Native OS & IDE Ambient Integration
+   ├── Desktop system tray companion (macOS / Linux / Windows)
+   ├── VS Code / Cursor IDE extension for software architecture reasoning
+   └── Privacy-first local LLM inference routing (Ollama, vLLM, Llama 3)
+```
+
+---
+
 ## License
 
-MIT © CognitiveOS Contributors
+MIT © CognitiveOS Contributors — *CreatedBYNJ5.0*
