@@ -16,10 +16,14 @@ import {
   PanelLeftOpen,
   Sun,
   Moon,
-  Radio
+  Radio,
+  Mic
 } from "lucide-react";
 import { useWorkspaceStore, WorkspaceModule } from "@/stores/workspace";
 import { cn } from "@cognitive-os/ui";
+import { VoiceThoughtInput } from "@/components/voice/VoiceThoughtInput";
+import { AnimatePresence } from "framer-motion";
+
 
 const navItems: { id: WorkspaceModule; label: string; icon: React.ElementType }[] = [
   { id: "graph", label: "Mind Map", icon: Network },
@@ -35,6 +39,8 @@ const navItems: { id: WorkspaceModule; label: string; icon: React.ElementType }[
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const { activeModule, setModule, isSidebarOpen, toggleSidebar } = useWorkspaceStore();
   const [isDark, setIsDark] = useState(true);
+  const [showVoiceModal, setShowVoiceModal] = useState(false);
+
 
   // Initialize theme from system or class
   useEffect(() => {
@@ -184,16 +190,35 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               <span>Cognitive Pipeline Active</span>
             </div>
 
+            {/* Voice Thought Ingestion Button */}
+            <button
+              onClick={() => setShowVoiceModal(true)}
+              title="Record Spoken Thought"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs font-semibold cursor-pointer"
+            >
+              <Mic size={15} />
+              <span className="hidden md:inline">Voice Input</span>
+            </button>
+
             {/* Dark / Light Mode Toggle */}
             <button
               onClick={toggleTheme}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
         </header>
+
+        {/* Global Voice Modal */}
+        <AnimatePresence>
+          {showVoiceModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+              <VoiceThoughtInput onClose={() => setShowVoiceModal(false)} />
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Work Area Viewport */}
         <div className="flex-1 overflow-auto relative z-10">

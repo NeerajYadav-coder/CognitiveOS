@@ -1,10 +1,11 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Brain, Sparkles, AlertCircle, Zap, RotateCcw, X } from "lucide-react"
+import { Brain, Sparkles, AlertCircle, Zap, RotateCcw, X, Compass, Mic, MicOff, Check } from "lucide-react"
 import { useCognitiveStore } from "~stores/cognitive"
-import { ChatGPTAdapter } from "~adapters/chatgpt"
+import { getActiveAdapter } from "~adapters"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -13,6 +14,69 @@ function cn(...inputs: ClassValue[]) {
 export const CognitiveOverlay = () => {
   const { rawPrompt, analysis, isAnalyzing, setAnalyzing } = useCognitiveStore()
   const [isOpen, setIsOpen] = useState(false)
+  const [isListening, setIsListening] = useState(false)
+  const [anchorNotice, setAnchorNotice] = useState("")
+  const recognitionRef = useRef<any>(null)
+
+  const toggleVoice = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      alert("Web Speech API not supported in this browser.")
+      return
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+    } else {
+      const recognition = new SpeechRecognition()
+      recognition.continuous = false
+      recognition.lang = "en-US"
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript
+        const adapter = getActiveAdapter()
+        if (adapter) {
+          const input = adapter.getPromptInput()
+          const current =
+            input instanceof HTMLTextAreaElement ? input.value : input?.innerText || ""
+          const updated = current ? `${current} ${transcript}` : transcript
+          adapter.injectEnhancedPrompt(updated)
+          useCognitiveStore.getState().updatePrompt(updated)
+        }
+        setIsListening(false)
+      }
+      recognition.onerror = () => setIsListening(false)
+      recognition.onend = () => setIsListening(false)
+      recognitionRef.current = recognition
+      try {
+        recognition.start()
+        setIsListening(true)
+      } catch (e) {
+        setIsListening(false)
+      }
+    }
+  }
+
+  const handleAnchorContext = () => {
+    const selection = window.getSelection()?.toString().trim()
+    const pageTitle = document.title
+    const contextSnippet = selection
+      ? `\n[Context: "${selection.slice(0, 200)}"]`
+      : `\n[Page: "${pageTitle}"]`
+
+    const adapter = getActiveAdapter()
+    if (adapter) {
+      const input = adapter.getPromptInput()
+      const current =
+        input instanceof HTMLTextAreaElement ? input.value : input?.innerText || ""
+      const updated = `${current}${contextSnippet}`
+      adapter.injectEnhancedPrompt(updated)
+      useCognitiveStore.getState().updatePrompt(updated)
+      setAnchorNotice(selection ? "Selection anchored" : "Page title anchored")
+      setTimeout(() => setAnchorNotice(""), 2500)
+    }
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-[99999] pointer-events-none font-sans">
@@ -69,15 +133,47 @@ export const CognitiveOverlay = () => {
             {/* Content Area */}
             <div className="p-3.5 space-y-3">
               {!analysis && !isAnalyzing && (
-                <div className="py-1">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={toggleVoice}
+                      title={isListening ? "Stop Voice Dictation" : "Dictate Prompt"}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer",
+                        isListening
+                          ? "bg-red-500 text-white border-red-600 animate-pulse"
+                          : "bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-white/10"
+                      )}
+                    >
+                      {isListening ? <MicOff size={13} /> : <Mic size={13} className="text-primary" />}
+                      <span>{isListening ? "Listening..." : "Dictate"}</span>
+                    </button>
+                    <button
+                      onClick={handleAnchorContext}
+                      title="Anchor highlighted text or active page title as context"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold border border-slate-200 dark:border-white/10 transition-all cursor-pointer"
+                    >
+                      <Compass size={13} className="text-primary" />
+                      <span>Anchor</span>
+                    </button>
+                  </div>
+
+                  {anchorNotice && (
+                    <p className="text-[10px] text-emerald-500 text-center font-semibold">
+                      ✓ {anchorNotice}
+                    </p>
+                  )}
+
                   <button 
                     onClick={() => {
-                      const adapter = new ChatGPTAdapter();
-                      const currentText = adapter.getPromptInput()?.innerText || (adapter.getPromptInput() as HTMLTextAreaElement)?.value || "";
-                      useCognitiveStore.getState().updatePrompt(currentText);
+                      const adapter = getActiveAdapter();
+                      if (adapter) {
+                        const currentText = adapter.getPromptInput()?.innerText || (adapter.getPromptInput() as HTMLTextAreaElement)?.value || "";
+                        useCognitiveStore.getState().updatePrompt(currentText);
+                      }
                       setAnalyzing(true);
                     }}
-                    className="w-full group flex items-center justify-center gap-2 py-2 px-3 bg-primary text-white rounded-xl font-bold text-xs transition-all hover:opacity-90 active:scale-95 shadow-sm"
+                    className="w-full group flex items-center justify-center gap-2 py-2 px-3 bg-primary text-white rounded-xl font-bold text-xs transition-all hover:opacity-90 active:scale-95 shadow-sm cursor-pointer"
                   >
                     <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
                     Analyze Draft Thought
@@ -139,11 +235,13 @@ export const CognitiveOverlay = () => {
                   <div className="pt-1 flex items-center gap-1.5">
                     <button 
                       onClick={() => {
-                        const adapter = new ChatGPTAdapter();
-                        adapter.injectEnhancedPrompt(analysis.structuredPrompt);
+                        const adapter = getActiveAdapter();
+                        if (adapter) {
+                          adapter.injectEnhancedPrompt(analysis.structuredPrompt);
+                        }
                         useCognitiveStore.getState().reset();
                       }}
-                      className="flex-1 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95 shadow-sm"
+                      className="flex-1 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all hover:opacity-90 active:scale-95 shadow-sm cursor-pointer"
                     >
                       Inject Optimized Prompt
                     </button>

@@ -319,3 +319,37 @@ class CognitiveState(BaseModel):
     
     def add_result(self, result: EngineResult):
         self.engine_results.append(result)
+
+class SpokenThoughtAnalysis(BaseModel):
+    cleaned_transcript: str = Field(description="Transcript with verbal fillers and disfluencies removed")
+    filler_words_removed: List[str] = Field(default_factory=list, description="Verbal fillers filtered out")
+    implicit_intent: str = Field(description="The underlying goal distilled from the spoken thought")
+    latent_hypotheses: List[str] = Field(default_factory=list, description="Implicit assumptions or hypotheses discovered")
+    spoken_ambiguity_score: float = Field(ge=0.0, le=1.0, description="Ambiguity rating of spoken thoughts")
+    focal_question: str = Field(description="A single crisp clarifying question to sharpen the spoken thought")
+    suggested_prompt: str = Field(description="Synthesized prompt ready for LLM dispatch")
+
+class GraphNode(BaseModel):
+    id: str
+    label: str
+    type: Optional[str] = None
+    domain: Optional[str] = None
+
+class GraphEdge(BaseModel):
+    id: Optional[str] = None
+    source: str
+    target: str
+    relation: Optional[str] = None
+
+class GraphSynthesisRequest(BaseModel):
+    nodes: List[GraphNode]
+    edges: List[GraphEdge] = []
+    goal: Optional[str] = None
+
+class GraphSynthesisResponse(BaseModel):
+    title: str
+    core_theme: str
+    conceptual_pathways: List[str]
+    synthesized_prompt: str
+    recommended_framework: str
+

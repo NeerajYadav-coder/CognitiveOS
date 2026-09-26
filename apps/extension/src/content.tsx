@@ -1,6 +1,6 @@
 import type { PlasmoCSConfig } from "plasmo"
 import { useEffect } from "react"
-import { ChatGPTAdapter } from "~adapters/chatgpt"
+import { getActiveAdapter } from "~adapters"
 import { useCognitiveStore } from "~stores/cognitive"
 import { CognitiveOverlay } from "~overlay/CognitiveOverlay"
 import cssText from "data-text:./style.css"
@@ -26,11 +26,13 @@ const CognitiveContentScript = () => {
   const { rawPrompt, updatePrompt, isAnalyzing, setAnalysis, setAnalyzing } = useCognitiveStore()
 
   useEffect(() => {
+    const adapter = getActiveAdapter();
+    if (!adapter) return;
+
     const interval = setInterval(() => {
-      const adapter = new ChatGPTAdapter()
       const input = adapter.getPromptInput()
       if (adapter.isMatch() && input) {
-        console.log("[CognitiveOS] Input Box Linked");
+        console.log(`[CognitiveOS] Input Box Linked for ${adapter.platformName}`);
         adapter.onPromptChange((text) => updatePrompt(text))
         clearInterval(interval)
       }

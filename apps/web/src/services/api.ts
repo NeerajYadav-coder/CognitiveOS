@@ -131,4 +131,62 @@ export const api = {
     if (!res.ok) throw new Error(`Pipeline execution failed: ${res.status}`);
     return await res.json();
   },
+
+  async processSpokenThought(rawSpeech: string, signal?: AbortSignal): Promise<SpokenThoughtAnalysis | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/cognitive/voice-stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raw_speech: rawSpeech }),
+        signal,
+      });
+      if (!res.ok) throw new Error(`Voice processing error: ${res.status}`);
+      return await res.json();
+    } catch (err: any) {
+      if (err.name === "AbortError") return null;
+      console.warn("[CognitiveAPI] Spoken thought processing failed:", err.message);
+      return null;
+    }
+  },
+
+  async synthesizeGraph(
+    nodes: Array<{ id: string; label: string; type?: string }>,
+    edges: Array<{ source: string; target: string; relation?: string }>,
+    goal?: string,
+    signal?: AbortSignal
+  ): Promise<GraphSynthesisResponse | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/cognitive/graph/synthesize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nodes, edges, goal }),
+        signal,
+      });
+      if (!res.ok) throw new Error(`Graph synthesis error: ${res.status}`);
+      return await res.json();
+    } catch (err: any) {
+      if (err.name === "AbortError") return null;
+      console.warn("[CognitiveAPI] Graph synthesis failed:", err.message);
+      return null;
+    }
+  },
 };
+
+export interface SpokenThoughtAnalysis {
+  cleaned_transcript: string;
+  filler_words_removed: string[];
+  implicit_intent: string;
+  latent_hypotheses: string[];
+  spoken_ambiguity_score: number;
+  focal_question: string;
+  suggested_prompt: string;
+}
+
+export interface GraphSynthesisResponse {
+  title: string;
+  core_theme: string;
+  conceptual_pathways: string[];
+  synthesized_prompt: string;
+  recommended_framework: string;
+}
+

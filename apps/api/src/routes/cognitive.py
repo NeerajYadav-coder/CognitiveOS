@@ -442,3 +442,72 @@ async def update_user_profile(request: ProfileUpdateRequest, db: AsyncSession = 
     except Exception as e:
         logger.error(f"Failed to update user profile: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to update user profile")
+
+from src.schemas.cognitive import (
+    SpokenThoughtAnalysis, 
+    GraphSynthesisRequest, 
+    GraphSynthesisResponse
+)
+from src.services.spoken_thought.engine import SpokenThoughtEngine
+
+class VoiceStreamRequest(BaseModel):
+    raw_speech: str = Field(..., description="Raw speech transcription from user")
+    session_id: Optional[str] = Field(default=None, description="Optional session ID")
+
+@router.post("/cognitive/voice-stream", response_model=SpokenThoughtAnalysis)
+async def process_voice_stream(request: VoiceStreamRequest):
+    """
+    Ingests spoken thoughts, strips conversational fillers,
+    calculates spoken ambiguity, and synthesizes structured prompts.
+    """
+    try:
+        engine = SpokenThoughtEngine()
+        result = await engine.process(request.raw_speech)
+        return result
+    except Exception as e:
+        logger.error(f"Failed to process voice stream: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Voice stream processing failed: {str(e)}")
+
+@router.post("/cognitive/graph/synthesize", response_model=GraphSynthesisResponse)
+async def synthesize_graph_topology(request: GraphSynthesisRequest):
+    """
+    Synthesizes a visual concept graph topology into a multi-perspective LLM prompt.
+    """
+    try:
+        node_labels = [n.label for n in request.nodes]
+        edge_relations = []
+        for e in request.edges:
+            src_node = next((n.label for n in request.nodes if n.id == e.source), e.source)
+            tgt_node = next((n.label for n in request.nodes if n.id == e.target), e.target)
+            edge_relations.append(f"{src_node} -> {tgt_node}")
+
+        title = " & ".join(node_labels[:3]) if node_labels else "Conceptual Graph"
+        core_theme = request.goal or (f"Interconnected conceptual model of {', '.join(node_labels[:4])}" if node_labels else "General Concept Map")
+        pathways = edge_relations if edge_relations else [f"Node: {n}" for n in node_labels]
+
+        prompt_lines = [
+            f"You are exploring a multi-perspective conceptual model focused on: {core_theme}.",
+            "",
+            "### Core Concept Nodes:",
+            "\n".join(f"- **{label}**" for label in node_labels) if node_labels else "- Unspecified concept nodes",
+            "",
+            "### Conceptual Pathways & Relational Edges:",
+            "\n".join(f"- {rel}" for rel in pathways) if pathways else "- Dynamic conceptual associations",
+            "",
+            "### Objective:",
+            "Synthesize these relational concepts into a coherent, deeply structured analysis. Identify first-principle truths, emergent tensions, and practical applications."
+        ]
+
+        synthesized_prompt = "\n".join(prompt_lines)
+
+        return GraphSynthesisResponse(
+            title=title,
+            core_theme=core_theme,
+            conceptual_pathways=pathways,
+            synthesized_prompt=synthesized_prompt,
+            recommended_framework="Dialectical Synthesis" if len(node_labels) > 2 else "First Principles"
+        )
+    except Exception as e:
+        logger.error(f"Failed to synthesize graph: {str(e)}")
+        raise HTTPException(status_code=500, detail="Graph synthesis failed")
+
