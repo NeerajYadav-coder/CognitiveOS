@@ -170,6 +170,40 @@ export const api = {
       return null;
     }
   },
+
+  async runDialecticalDebate(
+    topic: string,
+    strategy: string = "dialectical_debate",
+    depth: string = "deep",
+    signal?: AbortSignal
+  ): Promise<DialecticalDebateResponse | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/cognitive/dialectical-debate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, strategy, depth }),
+        signal,
+      });
+      if (!res.ok) throw new Error(`Dialectical debate error: ${res.status}`);
+      return await res.json();
+    } catch (err: any) {
+      if (err.name === "AbortError") return null;
+      console.warn("[CognitiveAPI] Dialectical debate failed:", err.message);
+      return null;
+    }
+  },
+
+  async getEvolutionDriftAnalysis(signal?: AbortSignal): Promise<CognitiveDriftReport | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/cognitive/evolution/drift-analysis`, { signal });
+      if (!res.ok) throw new Error(`Drift analysis error: ${res.status}`);
+      return await res.json();
+    } catch (err: any) {
+      if (err.name === "AbortError") return null;
+      console.warn("[CognitiveAPI] Drift analysis failed:", err.message);
+      return null;
+    }
+  },
 };
 
 export interface SpokenThoughtAnalysis {
@@ -189,4 +223,41 @@ export interface GraphSynthesisResponse {
   synthesized_prompt: string;
   recommended_framework: string;
 }
+
+export interface DebateTurn {
+  speaker: string;
+  role: "thesis" | "antithesis" | "pre_mortem" | "synthesis" | string;
+  argument: string;
+  key_assumptions: string[];
+  confidence: number;
+}
+
+export interface PreMortemFailureMode {
+  failure_scenario: string;
+  probability: "high" | "medium" | "low" | string;
+  mitigation_strategy: string;
+}
+
+export interface DialecticalDebateResponse {
+  topic: string;
+  strategy: string;
+  thesis: string;
+  antithesis: string;
+  pre_mortem_failure_modes: PreMortemFailureMode[];
+  debate_rounds: DebateTurn[];
+  dialectical_synthesis: string;
+  blindspots_exposed: string[];
+  battle_tested_prompt: string;
+  cognitive_rigor_score: number;
+}
+
+export interface CognitiveDriftReport {
+  total_interactions_analyzed: number;
+  semantic_drift_score: number;
+  dominant_thought_patterns: string[];
+  stagnation_risk: "low" | "moderate" | "elevated" | string;
+  evolutionary_recommendations: string[];
+  next_cognitive_frontier: string;
+}
+
 

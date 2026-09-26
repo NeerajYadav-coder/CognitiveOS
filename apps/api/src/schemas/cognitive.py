@@ -353,3 +353,41 @@ class GraphSynthesisResponse(BaseModel):
     synthesized_prompt: str
     recommended_framework: str
 
+class DebateTurn(BaseModel):
+    speaker: str = Field(description="Agent persona: Proponent, Devil's Advocate, Failure Analyst, Synthesizer")
+    role: str = Field(description="Role taxonomy: thesis, antithesis, pre_mortem, synthesis")
+    argument: str = Field(description="Substantive reasoning, steelmanned premise, or critique")
+    key_assumptions: List[str] = Field(default_factory=list, description="Core assumptions identified in this turn")
+    confidence: float = Field(ge=0.0, le=1.0, default=0.9)
+
+class PreMortemFailureMode(BaseModel):
+    failure_scenario: str = Field(description="How and why this concept fails in practice")
+    probability: str = Field(description="high, medium, low")
+    mitigation_strategy: str = Field(description="Concrete action to prevent this failure")
+
+class DialecticalDebateRequest(BaseModel):
+    topic: str = Field(..., description="The concept, prompt, or architectural hypothesis to stress-test")
+    strategy: Optional[str] = Field(default="dialectical_debate", description="debate_and_critique, adversarial_reasoning, pre_mortem, consensus_building")
+    depth: Optional[str] = Field(default="deep", description="surface, intermediate, deep")
+
+class DialecticalDebateResponse(BaseModel):
+    topic: str
+    strategy: str
+    thesis: str
+    antithesis: str
+    pre_mortem_failure_modes: List[PreMortemFailureMode] = Field(default_factory=list)
+    debate_rounds: List[DebateTurn] = Field(default_factory=list)
+    dialectical_synthesis: str
+    blindspots_exposed: List[str] = Field(default_factory=list)
+    battle_tested_prompt: str
+    cognitive_rigor_score: float = Field(ge=0.0, le=1.0, default=0.92)
+
+class CognitiveDriftReport(BaseModel):
+    total_interactions_analyzed: int
+    semantic_drift_score: float = Field(ge=0.0, le=1.0, description="Rate of cognitive pattern drift")
+    dominant_thought_patterns: List[str]
+    stagnation_risk: str = Field(description="low, moderate, elevated")
+    evolutionary_recommendations: List[str]
+    next_cognitive_frontier: str
+
+
